@@ -1,0 +1,25 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Java
+backend/target/
+
+# Maven Wrapper
+backend/.mvn/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Environment
+.env
+
+# Logs
+*.log
+
+# Windows
+Thumbs.db
+
+# macOS
+.DS_Store

@@ -12,8 +12,5 @@ public class QueueRequest {
     @NotNull
     private Long appointmentId;
 
-    @NotNull
-    private Integer queueNumber;
-
     private QueueStatus status;
 }

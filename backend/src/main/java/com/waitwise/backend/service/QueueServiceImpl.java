@@ -24,9 +24,15 @@ public class QueueServiceImpl implements QueueService {
         Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
+        Queue lastQueue = queueRepository.findTopByOrderByQueueNumberDesc();
+
+        int nextQueueNumber = (lastQueue == null)
+                ? 1
+                : lastQueue.getQueueNumber() + 1;
+
         Queue queue = Queue.builder()
                 .appointment(appointment)
-                .queueNumber(request.getQueueNumber())
+                .queueNumber(nextQueueNumber)
                 .status(request.getStatus())
                 .build();
 
@@ -63,7 +69,6 @@ public class QueueServiceImpl implements QueueService {
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         queue.setAppointment(appointment);
-        queue.setQueueNumber(request.getQueueNumber());
         queue.setStatus(request.getStatus());
 
         queue = queueRepository.save(queue);

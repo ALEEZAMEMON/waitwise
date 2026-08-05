@@ -4,12 +4,15 @@ import com.waitwise.backend.dto.AppointmentRequest;
 import com.waitwise.backend.dto.AppointmentResponse;
 import com.waitwise.backend.entity.Appointment;
 import com.waitwise.backend.entity.Business;
+import com.waitwise.backend.entity.User;
 import com.waitwise.backend.exception.ResourceNotFoundException;
 import com.waitwise.backend.repository.AppointmentRepository;
 import com.waitwise.backend.repository.BusinessRepository;
+import com.waitwise.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import com.waitwise.backend.exception.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -19,6 +22,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final BusinessRepository businessRepository;
+    private final UserRepository userRepository;
 
     @Override
     public AppointmentResponse createAppointment(AppointmentRequest request) {
@@ -26,8 +30,16 @@ public class AppointmentServiceImpl implements AppointmentService {
         Business business = businessRepository.findById(request.getBusinessId())
                 .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         Appointment appointment = Appointment.builder()
                 .business(business)
+                .user(user)
                 .appointmentTime(request.getAppointmentTime())
                 .status(request.getStatus())
                 .build();
@@ -40,7 +52,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public List<AppointmentResponse> getAllAppointments() {
 
-        return appointmentRepository.findAll()
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return appointmentRepository.findByUser(user)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();

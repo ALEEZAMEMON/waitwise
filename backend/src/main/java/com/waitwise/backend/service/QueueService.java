@@ -16,4 +16,9 @@ public interface QueueService {
     QueueResponse updateQueue(Long id, QueueRequest request);
 
     void deleteQueue(Long id);
+    List<QueueResponse> getBusinessQueue(Long businessId);
+
+    QueueResponse getCurrentServing(Long businessId);
+
+    QueueResponse callNextCustomer(Long businessId);
 }

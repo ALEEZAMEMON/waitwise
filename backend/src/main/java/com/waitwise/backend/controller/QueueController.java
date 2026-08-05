@@ -49,4 +49,21 @@ public class QueueController {
 
         return "Queue deleted successfully";
     }
+    @GetMapping("/business/{businessId}")
+    public List<QueueResponse> getBusinessQueue(@PathVariable Long businessId) {
+
+        return queueService.getBusinessQueue(businessId);
+    }
+
+    @GetMapping("/business/{businessId}/current")
+    public QueueResponse getCurrentServing(@PathVariable Long businessId) {
+
+        return queueService.getCurrentServing(businessId);
+    }
+
+    @PutMapping("/business/{businessId}/next")
+    public QueueResponse callNextCustomer(@PathVariable Long businessId) {
+
+        return queueService.callNextCustomer(businessId);
+    }
 }

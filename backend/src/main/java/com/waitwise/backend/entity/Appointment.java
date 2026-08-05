@@ -23,9 +23,14 @@ public class Appointment {
     @JoinColumn(name = "business_id", nullable = false)
     private Business business;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @Column(nullable = false)
     private LocalDateTime appointmentTime;
 
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
+
 }

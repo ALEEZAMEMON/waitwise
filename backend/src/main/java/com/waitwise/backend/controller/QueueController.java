@@ -66,4 +66,11 @@ public class QueueController {
 
         return queueService.callNextCustomer(businessId);
     }
+
+    @PutMapping("/business/{businessId}/complete")
+    public QueueResponse completeCurrentCustomer(
+            @PathVariable Long businessId) {
+
+        return queueService.completeCurrentCustomer(businessId);
+    }
 }

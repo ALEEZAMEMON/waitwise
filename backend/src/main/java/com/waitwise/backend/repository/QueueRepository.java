@@ -18,4 +18,9 @@ public interface QueueRepository extends JpaRepository<Queue, Long> {
             Business business,
             QueueStatus status
     );
+
+    List<Queue> findByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
+            Business business,
+            QueueStatus status
+    );
 }

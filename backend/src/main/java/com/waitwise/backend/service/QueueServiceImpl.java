@@ -147,6 +147,27 @@ public class QueueServiceImpl implements QueueService {
         return mapToResponse(nextQueue);
     }
 
+    @Override
+    public QueueResponse completeCurrentCustomer(Long businessId) {
+
+        Business business = businessRepository.findById(businessId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Business not found"));
+
+        Queue currentQueue = queueRepository
+                .findFirstByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
+                        business,
+                        QueueStatus.SERVING)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("No customer is currently being served"));
+
+        currentQueue.setStatus(QueueStatus.COMPLETED);
+
+        queueRepository.save(currentQueue);
+
+        return mapToResponse(currentQueue);
+    }
+
     private QueueResponse mapToResponse(Queue queue) {
 
         return QueueResponse.builder()

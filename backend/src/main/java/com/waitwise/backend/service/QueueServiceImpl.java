@@ -167,6 +167,23 @@ public class QueueServiceImpl implements QueueService {
 
         return mapToResponse(currentQueue);
     }
+    @Override
+    public QueueResponse cancelQueue(Long id) {
+
+        Queue queue = queueRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Queue not found"));
+
+        if (queue.getStatus() == QueueStatus.COMPLETED) {
+            throw new RuntimeException("Completed queue cannot be cancelled");
+        }
+
+        queue.setStatus(QueueStatus.CANCELLED);
+
+        queue = queueRepository.save(queue);
+
+        return mapToResponse(queue);
+    }
 
     private QueueResponse mapToResponse(Queue queue) {
 

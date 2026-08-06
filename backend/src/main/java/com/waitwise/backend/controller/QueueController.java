@@ -73,4 +73,10 @@ public class QueueController {
 
         return queueService.completeCurrentCustomer(businessId);
     }
+
+    @PutMapping("/{id}/cancel")
+    public QueueResponse cancelQueue(@PathVariable Long id) {
+
+        return queueService.cancelQueue(id);
+    }
 }

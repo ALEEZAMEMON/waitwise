@@ -18,10 +18,8 @@ public interface QueueService {
     void deleteQueue(Long id);
 
     List<QueueResponse> getBusinessQueue(Long businessId);
-
     QueueResponse getCurrentServing(Long businessId);
-
     QueueResponse callNextCustomer(Long businessId);
-
     QueueResponse completeCurrentCustomer(Long businessId);
+    QueueResponse cancelQueue(Long id);
 }

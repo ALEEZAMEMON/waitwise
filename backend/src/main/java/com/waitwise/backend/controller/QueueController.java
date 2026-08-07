@@ -1,7 +1,11 @@
 package com.waitwise.backend.controller;
 
+import com.waitwise.backend.dto.queue.CustomerDashboardResponse;
+import com.waitwise.backend.dto.queue.QueuePositionResponse;
 import com.waitwise.backend.dto.queue.QueueRequest;
 import com.waitwise.backend.dto.queue.QueueResponse;
+import com.waitwise.backend.dto.queue.QueueStatisticsResponse;
+import com.waitwise.backend.dto.queue.WaitTimeResponse;
 import com.waitwise.backend.service.QueueService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +53,7 @@ public class QueueController {
 
         return "Queue deleted successfully";
     }
+
     @GetMapping("/business/{businessId}")
     public List<QueueResponse> getBusinessQueue(@PathVariable Long businessId) {
 
@@ -78,5 +83,32 @@ public class QueueController {
     public QueueResponse cancelQueue(@PathVariable Long id) {
 
         return queueService.cancelQueue(id);
+    }
+
+    @GetMapping("/{queueId}/position")
+    public QueuePositionResponse getQueuePosition(
+            @PathVariable Long queueId) {
+
+        return queueService.getQueuePosition(queueId);
+    }
+
+    @GetMapping("/{queueId}/wait-time")
+    public WaitTimeResponse getEstimatedWaitTime(
+            @PathVariable Long queueId) {
+
+        return queueService.getEstimatedWaitTime(queueId);
+    }
+
+    @GetMapping("/statistics")
+    public QueueStatisticsResponse getQueueStatistics() {
+
+        return queueService.getQueueStatistics();
+    }
+
+    @GetMapping("/dashboard/{appointmentId}")
+    public CustomerDashboardResponse getCustomerDashboard(
+            @PathVariable Long appointmentId) {
+
+        return queueService.getCustomerDashboard(appointmentId);
     }
 }

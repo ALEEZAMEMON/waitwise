@@ -12,6 +12,11 @@ import com.waitwise.backend.repository.BusinessRepository;
 import com.waitwise.backend.repository.QueueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.waitwise.backend.dto.queue.CustomerDashboardResponse;
+import com.waitwise.backend.dto.queue.QueuePositionResponse;
+import com.waitwise.backend.dto.queue.QueueStatisticsResponse;
+import com.waitwise.backend.dto.queue.WaitTimeResponse;
+import com.waitwise.backend.repository.UserRepository;
 
 import java.util.List;
 
@@ -22,6 +27,7 @@ public class QueueServiceImpl implements QueueService {
     private final QueueRepository queueRepository;
     private final AppointmentRepository appointmentRepository;
     private final BusinessRepository businessRepository;
+    private final UserRepository userRepository;
 
     @Override
     public QueueResponse createQueue(QueueRequest request) {
@@ -183,6 +189,79 @@ public class QueueServiceImpl implements QueueService {
         queue = queueRepository.save(queue);
 
         return mapToResponse(queue);
+    }
+
+    @Override
+    public QueuePositionResponse getQueuePosition(Long queueId) {
+
+        Queue queue = queueRepository.findById(queueId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Queue not found"));
+
+        Business business = queue.getAppointment().getBusiness();
+
+        List<Queue> waitingQueues = queueRepository
+                .findByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
+                        business,
+                        QueueStatus.WAITING);
+
+        int peopleAhead = (int) waitingQueues.stream()
+                .filter(q -> q.getQueueNumber() < queue.getQueueNumber())
+                .count();
+
+        int estimatedWait = peopleAhead * 10;
+
+        return QueuePositionResponse.builder()
+                .queueId(queue.getId())
+                .queueNumber(queue.getQueueNumber())
+                .peopleAhead(peopleAhead)
+                .estimatedWaitMinutes(estimatedWait)
+                .build();
+    }
+
+    @Override
+    public WaitTimeResponse getEstimatedWaitTime(Long queueId) {
+
+        QueuePositionResponse position = getQueuePosition(queueId);
+
+        return WaitTimeResponse.builder()
+                .queueId(position.getQueueId())
+                .estimatedWaitMinutes(position.getEstimatedWaitMinutes())
+                .build();
+    }
+    @Override
+    public QueueStatisticsResponse getQueueStatistics() {
+
+        return QueueStatisticsResponse.builder()
+                .totalQueues(queueRepository.count())
+                .waitingCustomers(queueRepository.countByStatus(QueueStatus.WAITING))
+                .servingCustomers(queueRepository.countByStatus(QueueStatus.SERVING))
+                .completedCustomers(queueRepository.countByStatus(QueueStatus.COMPLETED))
+                .cancelledCustomers(queueRepository.countByStatus(QueueStatus.CANCELLED))
+                .build();
+    }
+    @Override
+    public CustomerDashboardResponse getCustomerDashboard(Long appointmentId) {
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Appointment not found"));
+
+        Queue queue = queueRepository.findByAppointment(appointment)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Queue not found"));
+
+        QueuePositionResponse position = getQueuePosition(queue.getId());
+
+        return CustomerDashboardResponse.builder()
+                .appointmentId(appointment.getId())
+                .queueId(queue.getId())
+                .businessName(appointment.getBusiness().getName())
+                .queueNumber(queue.getQueueNumber())
+                .peopleAhead(position.getPeopleAhead())
+                .estimatedWaitMinutes(position.getEstimatedWaitMinutes())
+                .queueStatus(queue.getStatus())
+                .build();
     }
 
     private QueueResponse mapToResponse(Queue queue) {

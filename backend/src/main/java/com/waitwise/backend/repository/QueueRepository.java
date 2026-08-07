@@ -1,5 +1,6 @@
 package com.waitwise.backend.repository;
 
+import com.waitwise.backend.entity.Appointment;
 import com.waitwise.backend.entity.Business;
 import com.waitwise.backend.entity.Queue;
 import com.waitwise.backend.enums.QueueStatus;
@@ -11,6 +12,8 @@ import java.util.Optional;
 public interface QueueRepository extends JpaRepository<Queue, Long> {
 
     Queue findTopByOrderByQueueNumberDesc();
+
+    Optional<Queue> findByAppointment(Appointment appointment);
 
     List<Queue> findByAppointment_BusinessOrderByQueueNumberAsc(Business business);
 

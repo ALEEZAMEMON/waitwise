@@ -1,7 +1,7 @@
 package com.waitwise.backend.service;
 
-import com.waitwise.backend.dto.BusinessOwnerRequest;
-import com.waitwise.backend.dto.BusinessOwnerResponse;
+import com.waitwise.backend.dto.business.BusinessOwnerRequest;
+import com.waitwise.backend.dto.business.BusinessOwnerResponse;
 
 import java.util.List;
 

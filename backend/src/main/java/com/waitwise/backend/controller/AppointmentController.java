@@ -1,7 +1,7 @@
 package com.waitwise.backend.controller;
 
-import com.waitwise.backend.dto.AppointmentRequest;
-import com.waitwise.backend.dto.AppointmentResponse;
+import com.waitwise.backend.dto.appointment.AppointmentRequest;
+import com.waitwise.backend.dto.appointment.AppointmentResponse;
 import com.waitwise.backend.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.waitwise.backend.controller;
 
-import com.waitwise.backend.dto.AuthResponse;
-import com.waitwise.backend.dto.LoginRequest;
-import com.waitwise.backend.dto.RegisterRequest;
+import com.waitwise.backend.dto.auth.AuthResponse;
+import com.waitwise.backend.dto.auth.LoginRequest;
+import com.waitwise.backend.dto.auth.RegisterRequest;
 import com.waitwise.backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.waitwise.backend.service;
 
-import com.waitwise.backend.dto.AppointmentRequest;
-import com.waitwise.backend.dto.AppointmentResponse;
+import com.waitwise.backend.dto.appointment.AppointmentRequest;
+import com.waitwise.backend.dto.appointment.AppointmentResponse;
 
 import java.util.List;
 

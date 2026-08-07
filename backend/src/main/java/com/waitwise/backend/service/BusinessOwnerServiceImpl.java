@@ -1,7 +1,6 @@
 package com.waitwise.backend.service;
-import com.waitwise.backend.repository.BusinessRepository;
-import com.waitwise.backend.dto.BusinessOwnerRequest;
-import com.waitwise.backend.dto.BusinessOwnerResponse;
+import com.waitwise.backend.dto.business.BusinessOwnerRequest;
+import com.waitwise.backend.dto.business.BusinessOwnerResponse;
 import com.waitwise.backend.entity.BusinessOwner;
 import com.waitwise.backend.repository.BusinessOwnerRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.waitwise.backend.dto;
+package com.waitwise.backend.dto.business;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.waitwise.backend.dto;
+package com.waitwise.backend.dto.user;
 
 import com.waitwise.backend.enums.Role;
 import lombok.Builder;

@@ -1,9 +1,9 @@
 package com.waitwise.backend.service;
 
-import com.waitwise.backend.dto.AuthResponse;
-import com.waitwise.backend.dto.LoginRequest;
-import com.waitwise.backend.dto.RegisterRequest;
-import com.waitwise.backend.dto.UserResponse;
+import com.waitwise.backend.dto.auth.AuthResponse;
+import com.waitwise.backend.dto.auth.LoginRequest;
+import com.waitwise.backend.dto.auth.RegisterRequest;
+import com.waitwise.backend.dto.user.UserResponse;
 import com.waitwise.backend.entity.User;
 import com.waitwise.backend.enums.Role;
 import com.waitwise.backend.repository.UserRepository;

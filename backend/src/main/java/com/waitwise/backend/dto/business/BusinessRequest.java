@@ -1,19 +1,27 @@
-package com.waitwise.backend.dto;
+package com.waitwise.backend.dto.business;
 
-import lombok.Builder;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-public class BusinessResponse {
+public class BusinessRequest {
 
-    private Long id;
+    @NotBlank
     private String name;
+
     private String description;
+
+    @NotBlank
     private String address;
+
+    @NotBlank
     private String phoneNumber;
+
+    @NotBlank
     private String openingTime;
+
+    @NotBlank
     private String closingTime;
 }

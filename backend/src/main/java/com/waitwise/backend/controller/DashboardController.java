@@ -1,7 +1,7 @@
 package com.waitwise.backend.controller;
 
-import com.waitwise.backend.dto.BusinessDashboardResponse;
-import com.waitwise.backend.dto.DashboardResponse;
+import com.waitwise.backend.dto.business.BusinessDashboardResponse;
+import com.waitwise.backend.dto.dashboard.DashboardResponse;
 import com.waitwise.backend.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

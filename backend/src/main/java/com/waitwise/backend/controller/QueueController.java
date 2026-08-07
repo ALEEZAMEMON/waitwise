@@ -1,7 +1,7 @@
 package com.waitwise.backend.controller;
 
-import com.waitwise.backend.dto.QueueRequest;
-import com.waitwise.backend.dto.QueueResponse;
+import com.waitwise.backend.dto.queue.QueueRequest;
+import com.waitwise.backend.dto.queue.QueueResponse;
 import com.waitwise.backend.service.QueueService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

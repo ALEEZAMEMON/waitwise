@@ -1,7 +1,7 @@
 package com.waitwise.backend.controller;
 import java.util.List;
-import com.waitwise.backend.dto.BusinessRequest;
-import com.waitwise.backend.dto.BusinessResponse;
+import com.waitwise.backend.dto.business.BusinessRequest;
+import com.waitwise.backend.dto.business.BusinessResponse;
 import com.waitwise.backend.service.BusinessService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

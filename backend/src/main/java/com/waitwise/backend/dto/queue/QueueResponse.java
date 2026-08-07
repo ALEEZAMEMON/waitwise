@@ -1,4 +1,4 @@
-package com.waitwise.backend.dto;
+package com.waitwise.backend.dto.queue;
 
 import com.waitwise.backend.enums.QueueStatus;
 import lombok.Builder;

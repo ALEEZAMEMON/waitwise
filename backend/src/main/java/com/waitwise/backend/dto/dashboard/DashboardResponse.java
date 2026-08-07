@@ -1,15 +1,11 @@
-package com.waitwise.backend.dto;
+package com.waitwise.backend.dto.dashboard;
 
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class BusinessDashboardResponse {
-
-    private Long businessId;
-
-    private String businessName;
+public class DashboardResponse {
 
     private long totalAppointments;
 

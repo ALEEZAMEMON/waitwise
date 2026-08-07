@@ -1,7 +1,7 @@
 package com.waitwise.backend.service;
 
-import com.waitwise.backend.dto.BusinessDashboardResponse;
-import com.waitwise.backend.dto.DashboardResponse;
+import com.waitwise.backend.dto.business.BusinessDashboardResponse;
+import com.waitwise.backend.dto.dashboard.DashboardResponse;
 import com.waitwise.backend.entity.Business;
 import com.waitwise.backend.enums.QueueStatus;
 import com.waitwise.backend.exception.ResourceNotFoundException;

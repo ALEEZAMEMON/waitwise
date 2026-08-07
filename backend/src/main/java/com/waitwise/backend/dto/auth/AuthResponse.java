@@ -1,5 +1,6 @@
-package com.waitwise.backend.dto;
+package com.waitwise.backend.dto.auth;
 
+import com.waitwise.backend.dto.user.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package com.waitwise.backend.dto;
+package com.waitwise.backend.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class BusinessOwnerRequest {
+public class RegisterRequest {
 
     @NotBlank
     private String fullName;
@@ -17,5 +17,6 @@ public class BusinessOwnerRequest {
     private String email;
 
     @NotBlank
-    private String phoneNumber;
+    private String password;
+
 }

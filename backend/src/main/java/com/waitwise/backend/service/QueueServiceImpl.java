@@ -17,6 +17,7 @@ import com.waitwise.backend.dto.queue.QueuePositionResponse;
 import com.waitwise.backend.dto.queue.QueueStatisticsResponse;
 import com.waitwise.backend.dto.queue.WaitTimeResponse;
 import com.waitwise.backend.repository.UserRepository;
+import com.waitwise.backend.service.NotificationService;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class QueueServiceImpl implements QueueService {
     private final AppointmentRepository appointmentRepository;
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Override
     public QueueResponse createQueue(QueueRequest request) {
@@ -48,6 +50,12 @@ public class QueueServiceImpl implements QueueService {
                 .build();
 
         queue = queueRepository.save(queue);
+
+        notificationService.createNotification(
+                appointment.getUser().getId(),
+                "You have successfully joined the queue. Your queue number is "
+                        + queue.getQueueNumber() + "."
+        );
 
         return mapToResponse(queue);
     }
@@ -150,6 +158,11 @@ public class QueueServiceImpl implements QueueService {
 
         queueRepository.save(nextQueue);
 
+        notificationService.createNotification(
+                nextQueue.getAppointment().getUser().getId(),
+                "It is now your turn. Please proceed to the counter."
+        );
+
         return mapToResponse(nextQueue);
     }
 
@@ -171,6 +184,11 @@ public class QueueServiceImpl implements QueueService {
 
         queueRepository.save(currentQueue);
 
+        notificationService.createNotification(
+                currentQueue.getAppointment().getUser().getId(),
+                "Your appointment has been completed. Thank you for visiting."
+        );
+
         return mapToResponse(currentQueue);
     }
     @Override
@@ -187,6 +205,11 @@ public class QueueServiceImpl implements QueueService {
         queue.setStatus(QueueStatus.CANCELLED);
 
         queue = queueRepository.save(queue);
+
+        notificationService.createNotification(
+                queue.getAppointment().getUser().getId(),
+                "Your queue has been cancelled."
+        );
 
         return mapToResponse(queue);
     }

@@ -25,4 +25,11 @@ public interface QueueRepository extends JpaRepository<Queue, Long> {
     );
 
     long countByStatus(QueueStatus status);
+
+    long countByAppointment_Business(Business business);
+
+    long countByAppointment_BusinessAndStatus(
+            Business business,
+            QueueStatus status
+    );
 }

@@ -1,21 +1,24 @@
 package com.waitwise.backend.dto.business;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class BusinessOwnerRequest {
 
-    @NotBlank
+    @NotNull
+    private Long userId;
+
+    @NotNull
+    private Long businessId;
+
     private String fullName;
 
-    @Email
-    @NotBlank
     private String email;
 
-    @NotBlank
     private String phoneNumber;
 }

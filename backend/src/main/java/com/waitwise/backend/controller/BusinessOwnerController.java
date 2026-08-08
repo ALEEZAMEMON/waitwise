@@ -50,4 +50,9 @@ public class BusinessOwnerController {
 
         return "Business Owner deleted successfully";
     }
+    @GetMapping("/me")
+    public BusinessOwnerResponse getMyBusinessOwner() {
+
+        return businessOwnerService.getMyBusinessOwner();
+    }
 }

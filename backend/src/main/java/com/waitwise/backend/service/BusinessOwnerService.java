@@ -13,7 +13,12 @@ public interface BusinessOwnerService {
 
     BusinessOwnerResponse getBusinessOwnerById(Long id);
 
-    BusinessOwnerResponse updateBusinessOwner(Long id, BusinessOwnerRequest request);
+    BusinessOwnerResponse updateBusinessOwner(
+            Long id,
+            BusinessOwnerRequest request
+    );
 
     void deleteBusinessOwner(Long id);
+
+    BusinessOwnerResponse getMyBusinessOwner();
 }

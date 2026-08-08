@@ -1,4 +1,4 @@
-# WaitWise Backend
+# WaitWise
 
 A Spring Boot backend for **WaitWise**, a restaurant queue and reservation management system. This project provides REST APIs for user authentication and will support restaurant management, reservations, waiting lists, and notifications.
 

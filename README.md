@@ -1,6 +1,15 @@
 # WaitWise
 
-A Spring Boot backend for **WaitWise**, a restaurant queue and reservation management system. This project provides REST APIs for user authentication and will support restaurant management, reservations, waiting lists, and notifications.
+
+### Smart Queue & Appointment Management Platform
+
+WaitWise is a smart queue and appointment management platform designed to reduce physical waiting time and improve the customer experience for businesses.
+
+Instead of customers physically waiting in long queues, WaitWise allows them to discover businesses, book appointments, join queues, monitor their position, receive estimated waiting times, and get notified when their turn is approaching.
+
+For businesses, WaitWise provides tools to manage appointments, organize customer queues, monitor daily activity, and gain insights through dashboards.
+
+
 
 ## Tech Stack
 

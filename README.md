@@ -51,41 +51,37 @@ src/main/java/com/waitwise/backend
 - Department Management
 
 
+## 👥 User Roles
+
+WaitWise is designed around three primary roles.
 
 ### 👤 Customer
 
-- User registration and login
-- JWT-based authentication
-- Browse available businesses
-- Create appointments
-- View appointments
-- Join and manage queue entries
-- View current queue position
-- View estimated waiting time
-- Track queue status
-- Receive notifications
-- Mark notifications as read
+- Register, log in, and manage their profile
+- Browse businesses and view business information
+- Book appointments and join queues
+- Track queue position, waiting time, and appointment status
+- Receive notifications and view their activity
+
+---
 
 ### 🏢 Business Owner
 
-- Business owner registration request
-- Business owner application approval workflow
-- Business profile management
-- View business dashboard
-- Monitor customer queues
-- View currently serving customer
-- Call the next customer
-- Complete the current customer
-- Cancel queue entries
-- Monitor appointment statistics
+- Apply for and manage an approved business account
+- Create and manage business information
+- Manage appointments and customer queues
+- Call, serve, complete, or cancel queue entries
+- Monitor business activity and performance through dashboards
+
+---
 
 ### 🛡️ Administrator
 
-- Review business owner applications
-- Approve business owner applications
-- Reject business owner applications
-- Manage users and business-related data
-- Control business owner access
+- Manage users and registered businesses
+- Review and verify business owner applications
+- Approve or reject business owner requests
+- Monitor platform activity and system operations
+- Maintain platform security and system integrity
 
 
 ---

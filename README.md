@@ -24,22 +24,29 @@ For businesses, WaitWise provides tools to manage appointments, organize custome
 
 ## Project Structure
 
-```
-src/main/java/com/waitwise/backend
+waitwise/
 │
-├── controller
-├── dto
-├── entity
-├── enums
-├── exception
-├── mapper
-├── repository
-├── security
-├── service
-├── util
-└── BackendApplication.java
-```
-
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── com.waitwise.backend/
+│       │       │
+│       │       ├── controller/
+│       │       ├── dto/
+│       │       ├── entity/
+│       │       ├── enums/
+│       │       ├── exception/
+│       │       ├── repository/
+│       │       ├── security/
+│       │       └── service/
+│       │
+│       └── resources/
+│           └── application.properties
+│
+├── pom.xml
+├── mvnw
+├── mvnw.cmd
+└── README.md
 ## 🚀 Features
 
 - Customer Queue Management

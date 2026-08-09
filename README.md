@@ -2,16 +2,6 @@
 
 A Spring Boot backend for **WaitWise**, a restaurant queue and reservation management system. This project provides REST APIs for user authentication and will support restaurant management, reservations, waiting lists, and notifications.
 
-## Features
-
-- User Registration
-- JWT Authentication
-- Password Encryption with BCrypt
-- Spring Security
-- PostgreSQL Database
-- RESTful APIs
-- Input Validation
-
 ## Tech Stack
 
 - Java 17
@@ -41,9 +31,6 @@ src/main/java/com/waitwise/backend
 └── BackendApplication.java
 ```
 
-## API Endpoints
-
-
 ## 🚀 Features
 
 - Customer Queue Management
@@ -53,6 +40,44 @@ src/main/java/com/waitwise/backend
 - Real-time Queue Updates
 - Queue Analytics
 - Department Management
+
+
+
+### 👤 Customer
+
+- User registration and login
+- JWT-based authentication
+- Browse available businesses
+- Create appointments
+- View appointments
+- Join and manage queue entries
+- View current queue position
+- View estimated waiting time
+- Track queue status
+- Receive notifications
+- Mark notifications as read
+
+### 🏢 Business Owner
+
+- Business owner registration request
+- Business owner application approval workflow
+- Business profile management
+- View business dashboard
+- Monitor customer queues
+- View currently serving customer
+- Call the next customer
+- Complete the current customer
+- Cancel queue entries
+- Monitor appointment statistics
+
+### 🛡️ Administrator
+
+- Review business owner applications
+- Approve business owner applications
+- Reject business owner applications
+- Manage users and business-related data
+- Control business owner access
+
 
 ---
 

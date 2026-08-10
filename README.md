@@ -24,13 +24,13 @@ For businesses, WaitWise provides tools to manage appointments, organize custome
 
 ## Project Structure
 
+```text
 waitwise/
 │
 ├── src/
 │   └── main/
 │       ├── java/
 │       │   └── com.waitwise.backend/
-│       │       │
 │       │       ├── controller/
 │       │       ├── dto/
 │       │       ├── entity/
@@ -47,6 +47,9 @@ waitwise/
 ├── mvnw
 ├── mvnw.cmd
 └── README.md
+```
+---
+
 ## 🚀 Features
 
 - Customer Queue Management

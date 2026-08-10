@@ -69,20 +69,38 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse getAppointmentById(Long id) {
 
+        User user = getCurrentUser();
+
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Appointment not found"));
+
+        if (!appointment.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not allowed to access this appointment");
+        }
 
         return mapToResponse(appointment);
     }
 
     @Override
-    public AppointmentResponse updateAppointment(Long id, AppointmentRequest request) {
+    public AppointmentResponse updateAppointment(
+            Long id,
+            AppointmentRequest request) {
+
+        User user = getCurrentUser();
 
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Appointment not found"));
+
+        if (!appointment.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException(
+                    "You are not allowed to update this appointment");
+        }
 
         Business business = businessRepository.findById(request.getBusinessId())
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Business not found"));
 
         appointment.setBusiness(business);
         appointment.setAppointmentTime(request.getAppointmentTime());
@@ -95,10 +113,30 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public void deleteAppointment(Long id) {
 
+        User user = getCurrentUser();
+
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Appointment not found"));
+
+        if (!appointment.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException(
+                    "You are not allowed to delete this appointment");
+        }
 
         appointmentRepository.delete(appointment);
+    }
+
+    private User getCurrentUser() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
     }
 
     private AppointmentResponse mapToResponse(Appointment appointment) {

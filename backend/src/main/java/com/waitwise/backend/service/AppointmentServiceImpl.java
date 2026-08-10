@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import com.waitwise.backend.enums.AppointmentStatus;
 
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .business(business)
                 .user(user)
                 .appointmentTime(request.getAppointmentTime())
-                .status(request.getStatus())
+                .status(AppointmentStatus.PENDING)
                 .build();
 
         appointment = appointmentRepository.save(appointment);
@@ -85,7 +86,6 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         appointment.setBusiness(business);
         appointment.setAppointmentTime(request.getAppointmentTime());
-        appointment.setStatus(request.getStatus());
 
         appointment = appointmentRepository.save(appointment);
 

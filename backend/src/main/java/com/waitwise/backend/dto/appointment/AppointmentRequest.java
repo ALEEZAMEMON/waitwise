@@ -1,6 +1,5 @@
 package com.waitwise.backend.dto.appointment;
 
-import com.waitwise.backend.enums.AppointmentStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +15,4 @@ public class AppointmentRequest {
 
     @NotNull
     private LocalDateTime appointmentTime;
-
-    private AppointmentStatus status;
 }

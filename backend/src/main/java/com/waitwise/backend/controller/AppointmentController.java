@@ -2,6 +2,7 @@ package com.waitwise.backend.controller;
 
 import com.waitwise.backend.dto.appointment.AppointmentRequest;
 import com.waitwise.backend.dto.appointment.AppointmentResponse;
+import com.waitwise.backend.dto.appointment.UpdateAppointmentStatusRequest;
 import com.waitwise.backend.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,8 @@ public class AppointmentController {
     }
 
     @GetMapping("/{id}")
-    public AppointmentResponse getAppointmentById(@PathVariable Long id) {
+    public AppointmentResponse getAppointmentById(
+            @PathVariable Long id) {
 
         return appointmentService.getAppointmentById(id);
     }
@@ -43,8 +45,17 @@ public class AppointmentController {
         return appointmentService.updateAppointment(id, request);
     }
 
+    @PutMapping("/{id}/status")
+    public AppointmentResponse updateAppointmentStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateAppointmentStatusRequest request) {
+
+        return appointmentService.updateAppointmentStatus(id, request);
+    }
+
     @DeleteMapping("/{id}")
-    public String deleteAppointment(@PathVariable Long id) {
+    public String deleteAppointment(
+            @PathVariable Long id) {
 
         appointmentService.deleteAppointment(id);
 

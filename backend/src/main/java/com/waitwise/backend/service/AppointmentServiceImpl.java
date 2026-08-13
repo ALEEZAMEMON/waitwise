@@ -2,6 +2,7 @@ package com.waitwise.backend.service;
 
 import com.waitwise.backend.dto.appointment.AppointmentRequest;
 import com.waitwise.backend.dto.appointment.AppointmentResponse;
+import com.waitwise.backend.dto.appointment.UpdateAppointmentStatusRequest;
 import com.waitwise.backend.entity.Appointment;
 import com.waitwise.backend.entity.Business;
 import com.waitwise.backend.entity.User;
@@ -104,6 +105,22 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         appointment.setBusiness(business);
         appointment.setAppointmentTime(request.getAppointmentTime());
+
+        appointment = appointmentRepository.save(appointment);
+
+        return mapToResponse(appointment);
+    }
+
+    @Override
+    public AppointmentResponse updateAppointmentStatus(
+            Long id,
+            UpdateAppointmentStatusRequest request) {
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Appointment not found"));
+
+        appointment.setStatus(request.getStatus());
 
         appointment = appointmentRepository.save(appointment);
 

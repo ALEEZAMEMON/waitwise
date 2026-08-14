@@ -25,74 +25,50 @@ public class QueueController {
     // CUSTOMER
     // =========================
 
-    // Customer joins a queue
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public QueueResponse createQueue(
             @Valid @RequestBody QueueRequest request) {
 
         return queueService.createQueue(request);
     }
 
-    // Customer views their queues
-    @GetMapping
-    @PreAuthorize("hasAnyRole('USER', 'BUSINESS_OWNER', 'ADMIN')")
-    public List<QueueResponse> getAllQueues() {
-
-        return queueService.getAllQueues();
-    }
-
-    // View a specific queue
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'BUSINESS_OWNER', 'ADMIN')")
-    public QueueResponse getQueueById(
-            @PathVariable Long id) {
-
-        return queueService.getQueueById(id);
-    }
-
-    // Customer can cancel their queue
-    // Business owner can also cancel a queue
-    @PutMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('USER', 'BUSINESS_OWNER')")
-    public QueueResponse cancelQueue(
-            @PathVariable Long id) {
-
-        return queueService.cancelQueue(id);
-    }
-
-    // Customer checks their queue position
     @GetMapping("/{queueId}/position")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public QueuePositionResponse getQueuePosition(
             @PathVariable Long queueId) {
 
         return queueService.getQueuePosition(queueId);
     }
 
-    // Customer checks estimated waiting time
     @GetMapping("/{queueId}/wait-time")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public WaitTimeResponse getEstimatedWaitTime(
             @PathVariable Long queueId) {
 
         return queueService.getEstimatedWaitTime(queueId);
     }
 
-    // Customer dashboard
     @GetMapping("/dashboard/{appointmentId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public CustomerDashboardResponse getCustomerDashboard(
             @PathVariable Long appointmentId) {
 
         return queueService.getCustomerDashboard(appointmentId);
     }
 
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public QueueResponse cancelQueue(@PathVariable Long id) {
+
+        return queueService.cancelQueue(id);
+    }
+
+
     // =========================
     // BUSINESS OWNER
     // =========================
 
-    // View all queues of a business
     @GetMapping("/business/{businessId}")
     @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
     public List<QueueResponse> getBusinessQueue(
@@ -101,7 +77,6 @@ public class QueueController {
         return queueService.getBusinessQueue(businessId);
     }
 
-    // View currently serving customer
     @GetMapping("/business/{businessId}/current")
     @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
     public QueueResponse getCurrentServing(
@@ -110,7 +85,6 @@ public class QueueController {
         return queueService.getCurrentServing(businessId);
     }
 
-    // Call next customer
     @PutMapping("/business/{businessId}/next")
     @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
     public QueueResponse callNextCustomer(
@@ -119,7 +93,6 @@ public class QueueController {
         return queueService.callNextCustomer(businessId);
     }
 
-    // Complete currently serving customer
     @PutMapping("/business/{businessId}/complete")
     @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
     public QueueResponse completeCurrentCustomer(
@@ -128,11 +101,33 @@ public class QueueController {
         return queueService.completeCurrentCustomer(businessId);
     }
 
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
+    public QueueStatisticsResponse getQueueStatistics() {
+
+        return queueService.getQueueStatistics();
+    }
+
+
     // =========================
     // ADMIN
     // =========================
 
-    // Update queue
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<QueueResponse> getAllQueues() {
+
+        return queueService.getAllQueues();
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public QueueResponse getQueueById(
+            @PathVariable Long id) {
+
+        return queueService.getQueueById(id);
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public QueueResponse updateQueue(
@@ -142,22 +137,12 @@ public class QueueController {
         return queueService.updateQueue(id, request);
     }
 
-    // Delete queue
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public String deleteQueue(
-            @PathVariable Long id) {
+    public String deleteQueue(@PathVariable Long id) {
 
         queueService.deleteQueue(id);
 
         return "Queue deleted successfully";
-    }
-
-    // Queue statistics
-    @GetMapping("/statistics")
-    @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
-    public QueueStatisticsResponse getQueueStatistics() {
-
-        return queueService.getQueueStatistics();
     }
 }

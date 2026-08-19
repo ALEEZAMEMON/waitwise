@@ -113,5 +113,9 @@ WaitWise is designed around three primary roles.
 - WebSocket
 
 
+---
 
+## 📌 Status
+
+🚧 Under Development
 

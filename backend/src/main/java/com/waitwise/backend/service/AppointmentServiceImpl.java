@@ -6,6 +6,8 @@ import com.waitwise.backend.dto.appointment.UpdateAppointmentStatusRequest;
 import com.waitwise.backend.entity.Appointment;
 import com.waitwise.backend.entity.Business;
 import com.waitwise.backend.entity.User;
+import com.waitwise.backend.enums.AppointmentStatus;
+import com.waitwise.backend.enums.Role;
 import com.waitwise.backend.exception.ResourceNotFoundException;
 import com.waitwise.backend.repository.AppointmentRepository;
 import com.waitwise.backend.repository.BusinessRepository;
@@ -14,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import com.waitwise.backend.enums.AppointmentStatus;
 
 import java.util.List;
 
@@ -26,18 +27,32 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
 
+
+    // =========================
+    // CREATE APPOINTMENT
+    // =========================
+
     @Override
-    public AppointmentResponse createAppointment(AppointmentRequest request) {
+    public AppointmentResponse createAppointment(
+            AppointmentRequest request) {
 
-        Business business = businessRepository.findById(request.getBusinessId())
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+        User user = getCurrentUser();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // Only customers and admins can create appointments
+        if (user.getRole() != Role.USER &&
+                user.getRole() != Role.ADMIN) {
 
-        String email = authentication.getName();
+            throw new RuntimeException(
+                    "Only customers can create appointments"
+            );
+        }
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Business business = businessRepository.findById(
+                request.getBusinessId()
+        ).orElseThrow(() ->
+                new ResourceNotFoundException(
+                        "Business not found"
+                ));
 
         Appointment appointment = Appointment.builder()
                 .business(business)
@@ -51,21 +66,39 @@ public class AppointmentServiceImpl implements AppointmentService {
         return mapToResponse(appointment);
     }
 
+
+    // =========================
+    // GET APPOINTMENTS
+    // =========================
+
     @Override
     public List<AppointmentResponse> getAllAppointments() {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = getCurrentUser();
 
-        String email = authentication.getName();
+        /*
+         * ADMIN can see all appointments.
+         *
+         * CUSTOMER only sees their own appointments.
+         */
+        if (user.getRole() == Role.ADMIN) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            return appointmentRepository.findAll()
+                    .stream()
+                    .map(this::mapToResponse)
+                    .toList();
+        }
 
         return appointmentRepository.findByUser(user)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
+
+
+    // =========================
+    // GET APPOINTMENT BY ID
+    // =========================
 
     @Override
     public AppointmentResponse getAppointmentById(Long id) {
@@ -74,14 +107,19 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Appointment not found"));
+                        new ResourceNotFoundException(
+                                "Appointment not found"
+                        ));
 
-        if (!appointment.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("You are not allowed to access this appointment");
-        }
+        verifyAppointmentAccess(appointment, user);
 
         return mapToResponse(appointment);
     }
+
+
+    // =========================
+    // UPDATE APPOINTMENT
+    // =========================
 
     @Override
     public AppointmentResponse updateAppointment(
@@ -92,33 +130,59 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Appointment not found"));
+                        new ResourceNotFoundException(
+                                "Appointment not found"
+                        ));
 
-        if (!appointment.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException(
-                    "You are not allowed to update this appointment");
-        }
+        verifyAppointmentAccess(appointment, user);
 
-        Business business = businessRepository.findById(request.getBusinessId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Business not found"));
+        Business business = businessRepository.findById(
+                request.getBusinessId()
+        ).orElseThrow(() ->
+                new ResourceNotFoundException(
+                        "Business not found"
+                ));
 
         appointment.setBusiness(business);
-        appointment.setAppointmentTime(request.getAppointmentTime());
+        appointment.setAppointmentTime(
+                request.getAppointmentTime()
+        );
 
         appointment = appointmentRepository.save(appointment);
 
         return mapToResponse(appointment);
     }
 
+
+    // =========================
+    // UPDATE APPOINTMENT STATUS
+    // =========================
+
     @Override
     public AppointmentResponse updateAppointmentStatus(
             Long id,
             UpdateAppointmentStatusRequest request) {
 
+        User user = getCurrentUser();
+
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Appointment not found"));
+                        new ResourceNotFoundException(
+                                "Appointment not found"
+                        ));
+
+        /*
+         * Only ADMIN can directly change appointment status.
+         *
+         * Normal customer status changes should happen
+         * through the proper appointment/queue workflow.
+         */
+        if (user.getRole() != Role.ADMIN) {
+
+            throw new RuntimeException(
+                    "Only administrators can change appointment status"
+            );
+        }
 
         appointment.setStatus(request.getStatus());
 
@@ -127,6 +191,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         return mapToResponse(appointment);
     }
 
+
+    // =========================
+    // DELETE APPOINTMENT
+    // =========================
+
     @Override
     public void deleteAppointment(Long id) {
 
@@ -134,36 +203,87 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Appointment not found"));
+                        new ResourceNotFoundException(
+                                "Appointment not found"
+                        ));
 
-        if (!appointment.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException(
-                    "You are not allowed to delete this appointment");
-        }
+        verifyAppointmentAccess(appointment, user);
 
         appointmentRepository.delete(appointment);
     }
 
+
+    // =========================
+    // CURRENT USER
+    // =========================
+
     private User getCurrentUser() {
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
         String email = authentication.getName();
 
         return userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(
+                                "User not found"
+                        ));
     }
 
-    private AppointmentResponse mapToResponse(Appointment appointment) {
+
+    // =========================
+    // APPOINTMENT OWNERSHIP
+    // =========================
+
+    private void verifyAppointmentAccess(
+            Appointment appointment,
+            User user) {
+
+        /*
+         * ADMIN has access to every appointment.
+         */
+        if (user.getRole() == Role.ADMIN) {
+            return;
+        }
+
+        /*
+         * Normal users can only access
+         * appointments that belong to them.
+         */
+        if (!appointment.getUser().getId()
+                .equals(user.getId())) {
+
+            throw new RuntimeException(
+                    "You are not authorized to access this appointment"
+            );
+        }
+    }
+
+
+    // =========================
+    // RESPONSE MAPPER
+    // =========================
+
+    private AppointmentResponse mapToResponse(
+            Appointment appointment) {
 
         return AppointmentResponse.builder()
                 .id(appointment.getId())
-                .businessId(appointment.getBusiness().getId())
-                .businessName(appointment.getBusiness().getName())
-                .appointmentTime(appointment.getAppointmentTime())
-                .status(appointment.getStatus())
+                .businessId(
+                        appointment.getBusiness().getId()
+                )
+                .businessName(
+                        appointment.getBusiness().getName()
+                )
+                .appointmentTime(
+                        appointment.getAppointmentTime()
+                )
+                .status(
+                        appointment.getStatus()
+                )
                 .build();
     }
 }

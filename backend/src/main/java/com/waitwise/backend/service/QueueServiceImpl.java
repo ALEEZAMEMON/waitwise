@@ -18,6 +18,12 @@ import com.waitwise.backend.dto.queue.QueueStatisticsResponse;
 import com.waitwise.backend.dto.queue.WaitTimeResponse;
 import com.waitwise.backend.repository.UserRepository;
 import com.waitwise.backend.service.NotificationService;
+import com.waitwise.backend.entity.BusinessOwner;
+import com.waitwise.backend.entity.User;
+import com.waitwise.backend.enums.Role;
+import com.waitwise.backend.repository.BusinessOwnerRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -29,7 +35,9 @@ public class QueueServiceImpl implements QueueService {
     private final AppointmentRepository appointmentRepository;
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
+    private final BusinessOwnerRepository businessOwnerRepository;
     private final NotificationService notificationService;
+
 
     @Override
     public QueueResponse createQueue(QueueRequest request) {
@@ -107,10 +115,14 @@ public class QueueServiceImpl implements QueueService {
     @Override
     public List<QueueResponse> getBusinessQueue(Long businessId) {
 
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+        verifyBusinessOwnership(businessId);
 
-        return queueRepository.findByAppointment_BusinessOrderByQueueNumberAsc(business)
+        Business business = businessRepository.findById(businessId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Business not found"));
+
+        return queueRepository
+                .findByAppointment_BusinessOrderByQueueNumberAsc(business)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -119,15 +131,19 @@ public class QueueServiceImpl implements QueueService {
     @Override
     public QueueResponse getCurrentServing(Long businessId) {
 
+        verifyBusinessOwnership(businessId);
+
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Business not found"));
 
         Queue queue = queueRepository
                 .findFirstByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
                         business,
                         QueueStatus.SERVING)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("No customer is currently being served"));
+                        new ResourceNotFoundException(
+                                "No customer is currently being served"));
 
         return mapToResponse(queue);
     }
@@ -135,8 +151,11 @@ public class QueueServiceImpl implements QueueService {
     @Override
     public QueueResponse callNextCustomer(Long businessId) {
 
+        verifyBusinessOwnership(businessId);
+
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Business not found"));
 
         queueRepository
                 .findFirstByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
@@ -152,7 +171,8 @@ public class QueueServiceImpl implements QueueService {
                         business,
                         QueueStatus.WAITING)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("No waiting customers"));
+                        new ResourceNotFoundException(
+                                "No waiting customers"));
 
         nextQueue.setStatus(QueueStatus.SERVING);
 
@@ -169,6 +189,8 @@ public class QueueServiceImpl implements QueueService {
     @Override
     public QueueResponse completeCurrentCustomer(Long businessId) {
 
+        verifyBusinessOwnership(businessId);
+
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Business not found"));
@@ -178,7 +200,8 @@ public class QueueServiceImpl implements QueueService {
                         business,
                         QueueStatus.SERVING)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("No customer is currently being served"));
+                        new ResourceNotFoundException(
+                                "No customer is currently being served"));
 
         currentQueue.setStatus(QueueStatus.COMPLETED);
 
@@ -198,8 +221,40 @@ public class QueueServiceImpl implements QueueService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Queue not found"));
 
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        if (user.getRole() == Role.BUSINESS_OWNER) {
+
+            BusinessOwner owner =
+                    businessOwnerRepository.findByUser_Email(email)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "You are not a business owner"
+                                    ));
+
+            Long queueBusinessId =
+                    queue.getAppointment()
+                            .getBusiness()
+                            .getId();
+
+            if (!owner.getBusiness().getId().equals(queueBusinessId)) {
+                throw new RuntimeException(
+                        "You are not authorized to cancel this queue"
+                );
+            }
+        }
+
         if (queue.getStatus() == QueueStatus.COMPLETED) {
-            throw new RuntimeException("Completed queue cannot be cancelled");
+            throw new RuntimeException(
+                    "Completed queue cannot be cancelled"
+            );
         }
 
         queue.setStatus(QueueStatus.CANCELLED);
@@ -285,6 +340,35 @@ public class QueueServiceImpl implements QueueService {
                 .estimatedWaitMinutes(position.getEstimatedWaitMinutes())
                 .queueStatus(queue.getStatus())
                 .build();
+    }
+    private void verifyBusinessOwnership(Long businessId) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        // Admin can access any business
+        if (user.getRole() == Role.ADMIN) {
+            return;
+        }
+
+        BusinessOwner owner =
+                businessOwnerRepository.findByUser_Email(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "You are not a business owner"
+                                ));
+
+        if (!owner.getBusiness().getId().equals(businessId)) {
+            throw new RuntimeException(
+                    "You are not authorized to access this business"
+            );
+        }
     }
 
     private QueueResponse mapToResponse(Queue queue) {

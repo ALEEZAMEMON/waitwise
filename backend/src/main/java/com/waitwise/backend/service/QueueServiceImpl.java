@@ -42,8 +42,36 @@ public class QueueServiceImpl implements QueueService {
     @Override
     public QueueResponse createQueue(QueueRequest request) {
 
-        Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
+        Appointment appointment = appointmentRepository.findById(
+                request.getAppointmentId()
+        ).orElseThrow(() ->
+                new ResourceNotFoundException("Appointment not found"));
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        // Admin can create a queue for any appointment
+        if (user.getRole() != Role.ADMIN) {
+
+            if (!appointment.getUser().getId().equals(user.getId())) {
+                throw new RuntimeException(
+                        "You are not authorized to join this appointment's queue"
+                );
+            }
+        }
+
+        // Prevent the same appointment from joining the queue twice
+        if (queueRepository.findByAppointment(appointment).isPresent()) {
+            throw new RuntimeException(
+                    "This appointment is already in the queue"
+            );
+        }
 
         Queue lastQueue = queueRepository.findTopByOrderByQueueNumberDesc();
 

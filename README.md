@@ -112,8 +112,10 @@ WaitWise is designed around three primary roles.
 - JWT Authentication
 - WebSocket
 
+
 ---
 
 ## 📌 Status
 
 🚧 Under Development
+

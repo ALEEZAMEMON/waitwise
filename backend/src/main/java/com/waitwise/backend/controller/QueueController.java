@@ -21,6 +21,7 @@ public class QueueController {
 
     private final QueueService queueService;
 
+
     // =========================
     // CUSTOMER
     // =========================
@@ -33,35 +34,42 @@ public class QueueController {
         return queueService.createQueue(request);
     }
 
-    @GetMapping("/{queueId}/position")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public QueuePositionResponse getQueuePosition(
-            @PathVariable Long queueId) {
 
-        return queueService.getQueuePosition(queueId);
+    @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public List<QueueResponse> getAllQueues() {
+
+        return queueService.getAllQueues();
     }
 
-    @GetMapping("/{queueId}/wait-time")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public WaitTimeResponse getEstimatedWaitTime(
-            @PathVariable Long queueId) {
 
-        return queueService.getEstimatedWaitTime(queueId);
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public QueueResponse getQueueById(
+            @PathVariable Long id) {
+
+        return queueService.getQueueById(id);
     }
 
-    @GetMapping("/dashboard/{appointmentId}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public CustomerDashboardResponse getCustomerDashboard(
-            @PathVariable Long appointmentId) {
 
-        return queueService.getCustomerDashboard(appointmentId);
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public QueueResponse updateQueue(
+            @PathVariable Long id,
+            @Valid @RequestBody QueueRequest request) {
+
+        return queueService.updateQueue(id, request);
     }
 
-    @PutMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public QueueResponse cancelQueue(@PathVariable Long id) {
 
-        return queueService.cancelQueue(id);
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public String deleteQueue(
+            @PathVariable Long id) {
+
+        queueService.deleteQueue(id);
+
+        return "Queue deleted successfully";
     }
 
 
@@ -77,6 +85,7 @@ public class QueueController {
         return queueService.getBusinessQueue(businessId);
     }
 
+
     @GetMapping("/business/{businessId}/current")
     @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
     public QueueResponse getCurrentServing(
@@ -84,6 +93,7 @@ public class QueueController {
 
         return queueService.getCurrentServing(businessId);
     }
+
 
     @PutMapping("/business/{businessId}/next")
     @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
@@ -93,6 +103,7 @@ public class QueueController {
         return queueService.callNextCustomer(businessId);
     }
 
+
     @PutMapping("/business/{businessId}/complete")
     @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
     public QueueResponse completeCurrentCustomer(
@@ -101,11 +112,44 @@ public class QueueController {
         return queueService.completeCurrentCustomer(businessId);
     }
 
-    @GetMapping("/statistics")
-    @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'ADMIN')")
-    public QueueStatisticsResponse getQueueStatistics() {
 
-        return queueService.getQueueStatistics();
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('USER', 'BUSINESS_OWNER', 'ADMIN')")
+    public QueueResponse cancelQueue(
+            @PathVariable Long id) {
+
+        return queueService.cancelQueue(id);
+    }
+
+
+    // =========================
+    // CUSTOMER QUEUE INFO
+    // =========================
+
+    @GetMapping("/{queueId}/position")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public QueuePositionResponse getQueuePosition(
+            @PathVariable Long queueId) {
+
+        return queueService.getQueuePosition(queueId);
+    }
+
+
+    @GetMapping("/{queueId}/wait-time")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public WaitTimeResponse getEstimatedWaitTime(
+            @PathVariable Long queueId) {
+
+        return queueService.getEstimatedWaitTime(queueId);
+    }
+
+
+    @GetMapping("/dashboard/{appointmentId}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public CustomerDashboardResponse getCustomerDashboard(
+            @PathVariable Long appointmentId) {
+
+        return queueService.getCustomerDashboard(appointmentId);
     }
 
 
@@ -113,36 +157,10 @@ public class QueueController {
     // ADMIN
     // =========================
 
-    @GetMapping
+    @GetMapping("/statistics")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<QueueResponse> getAllQueues() {
+    public QueueStatisticsResponse getQueueStatistics() {
 
-        return queueService.getAllQueues();
-    }
-
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public QueueResponse getQueueById(
-            @PathVariable Long id) {
-
-        return queueService.getQueueById(id);
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public QueueResponse updateQueue(
-            @PathVariable Long id,
-            @Valid @RequestBody QueueRequest request) {
-
-        return queueService.updateQueue(id, request);
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public String deleteQueue(@PathVariable Long id) {
-
-        queueService.deleteQueue(id);
-
-        return "Queue deleted successfully";
+        return queueService.getQueueStatistics();
     }
 }

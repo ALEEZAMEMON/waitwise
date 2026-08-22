@@ -1,29 +1,28 @@
 package com.waitwise.backend.service;
 
-import com.waitwise.backend.dto.queue.QueueRequest;
-import com.waitwise.backend.dto.queue.QueueResponse;
-import com.waitwise.backend.entity.Appointment;
-import com.waitwise.backend.entity.Business;
-import com.waitwise.backend.entity.Queue;
-import com.waitwise.backend.enums.QueueStatus;
-import com.waitwise.backend.exception.ResourceNotFoundException;
-import com.waitwise.backend.repository.AppointmentRepository;
-import com.waitwise.backend.repository.BusinessRepository;
-import com.waitwise.backend.repository.QueueRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import com.waitwise.backend.dto.queue.CustomerDashboardResponse;
 import com.waitwise.backend.dto.queue.QueuePositionResponse;
+import com.waitwise.backend.dto.queue.QueueRequest;
+import com.waitwise.backend.dto.queue.QueueResponse;
 import com.waitwise.backend.dto.queue.QueueStatisticsResponse;
 import com.waitwise.backend.dto.queue.WaitTimeResponse;
-import com.waitwise.backend.repository.UserRepository;
-import com.waitwise.backend.service.NotificationService;
+import com.waitwise.backend.entity.Appointment;
+import com.waitwise.backend.entity.Business;
 import com.waitwise.backend.entity.BusinessOwner;
+import com.waitwise.backend.entity.Queue;
 import com.waitwise.backend.entity.User;
+import com.waitwise.backend.enums.QueueStatus;
 import com.waitwise.backend.enums.Role;
+import com.waitwise.backend.exception.ResourceNotFoundException;
+import com.waitwise.backend.repository.AppointmentRepository;
 import com.waitwise.backend.repository.BusinessOwnerRepository;
+import com.waitwise.backend.repository.BusinessRepository;
+import com.waitwise.backend.repository.QueueRepository;
+import com.waitwise.backend.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -39,41 +38,40 @@ public class QueueServiceImpl implements QueueService {
     private final NotificationService notificationService;
 
 
+    // =========================
+    // CREATE QUEUE
+    // =========================
+
     @Override
     public QueueResponse createQueue(QueueRequest request) {
+
+        User user = getCurrentUser();
 
         Appointment appointment = appointmentRepository.findById(
                 request.getAppointmentId()
         ).orElseThrow(() ->
                 new ResourceNotFoundException("Appointment not found"));
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+        // Admin can create a queue for any appointment.
+        // Normal users can only join their own appointment.
+        if (user.getRole() != Role.ADMIN &&
+                !appointment.getUser().getId().equals(user.getId())) {
 
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
-
-        // Admin can create a queue for any appointment
-        if (user.getRole() != Role.ADMIN) {
-
-            if (!appointment.getUser().getId().equals(user.getId())) {
-                throw new RuntimeException(
-                        "You are not authorized to join this appointment's queue"
-                );
-            }
+            throw new RuntimeException(
+                    "You are not authorized to join this appointment's queue"
+            );
         }
 
-        // Prevent the same appointment from joining the queue twice
+        // Prevent duplicate queue entries.
         if (queueRepository.findByAppointment(appointment).isPresent()) {
+
             throw new RuntimeException(
                     "This appointment is already in the queue"
             );
         }
 
-        Queue lastQueue = queueRepository.findTopByOrderByQueueNumberDesc();
+        Queue lastQueue =
+                queueRepository.findTopByOrderByQueueNumberDesc();
 
         int nextQueueNumber = (lastQueue == null)
                 ? 1
@@ -96,111 +94,199 @@ public class QueueServiceImpl implements QueueService {
         return mapToResponse(queue);
     }
 
+
+    // =========================
+    // GET ALL QUEUES
+    // =========================
+
     @Override
     public List<QueueResponse> getAllQueues() {
 
+        User user = getCurrentUser();
+
+        // Only admin can see every queue.
+        if (user.getRole() == Role.ADMIN) {
+
+            return queueRepository.findAll()
+                    .stream()
+                    .map(this::mapToResponse)
+                    .toList();
+        }
+
+        // Normal users only see their own queues.
         return queueRepository.findAll()
                 .stream()
+                .filter(queue ->
+                        queue.getAppointment()
+                                .getUser()
+                                .getId()
+                                .equals(user.getId()))
                 .map(this::mapToResponse)
                 .toList();
     }
 
+
+    // =========================
+    // GET QUEUE BY ID
+    // =========================
+
     @Override
     public QueueResponse getQueueById(Long id) {
 
-        Queue queue = queueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Queue not found"));
+        User user = getCurrentUser();
+
+        Queue queue = findQueue(id);
+
+        verifyQueueAccess(queue, user);
 
         return mapToResponse(queue);
     }
 
+
+    // =========================
+    // UPDATE QUEUE
+    // =========================
+
     @Override
-    public QueueResponse updateQueue(Long id, QueueRequest request) {
+    public QueueResponse updateQueue(
+            Long id,
+            QueueRequest request) {
 
-        Queue queue = queueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Queue not found"));
+        User user = getCurrentUser();
 
-        Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
+        Queue queue = findQueue(id);
+
+        verifyQueueAccess(queue, user);
+
+        Appointment appointment =
+                appointmentRepository.findById(
+                        request.getAppointmentId()
+                ).orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Appointment not found"
+                        ));
+
+        // Make sure the new appointment also belongs
+        // to the same user unless admin is performing it.
+        if (user.getRole() != Role.ADMIN &&
+                !appointment.getUser().getId().equals(user.getId())) {
+
+            throw new RuntimeException(
+                    "You are not authorized to use this appointment"
+            );
+        }
 
         queue.setAppointment(appointment);
-        queue.setStatus(request.getStatus());
+
+        if (request.getStatus() != null) {
+            queue.setStatus(request.getStatus());
+        }
 
         queue = queueRepository.save(queue);
 
         return mapToResponse(queue);
     }
 
+
+    // =========================
+    // DELETE QUEUE
+    // =========================
+
     @Override
     public void deleteQueue(Long id) {
 
-        Queue queue = queueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Queue not found"));
+        User user = getCurrentUser();
+
+        Queue queue = findQueue(id);
+
+        verifyQueueAccess(queue, user);
 
         queueRepository.delete(queue);
     }
 
+
+    // =========================
+    // BUSINESS QUEUE
+    // =========================
+
     @Override
-    public List<QueueResponse> getBusinessQueue(Long businessId) {
+    public List<QueueResponse> getBusinessQueue(
+            Long businessId) {
 
         verifyBusinessOwnership(businessId);
 
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Business not found"));
+        Business business = findBusiness(businessId);
 
         return queueRepository
-                .findByAppointment_BusinessOrderByQueueNumberAsc(business)
+                .findByAppointment_BusinessOrderByQueueNumberAsc(
+                        business
+                )
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
+
+    // =========================
+    // CURRENT SERVING
+    // =========================
+
     @Override
-    public QueueResponse getCurrentServing(Long businessId) {
+    public QueueResponse getCurrentServing(
+            Long businessId) {
 
         verifyBusinessOwnership(businessId);
 
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Business not found"));
+        Business business = findBusiness(businessId);
 
         Queue queue = queueRepository
                 .findFirstByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
                         business,
-                        QueueStatus.SERVING)
+                        QueueStatus.SERVING
+                )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "No customer is currently being served"));
+                                "No customer is currently being served"
+                        ));
 
         return mapToResponse(queue);
     }
 
+
+    // =========================
+    // CALL NEXT CUSTOMER
+    // =========================
+
     @Override
-    public QueueResponse callNextCustomer(Long businessId) {
+    public QueueResponse callNextCustomer(
+            Long businessId) {
 
         verifyBusinessOwnership(businessId);
 
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Business not found"));
+        Business business = findBusiness(businessId);
 
+        // Complete currently serving customer.
         queueRepository
                 .findFirstByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
                         business,
-                        QueueStatus.SERVING)
+                        QueueStatus.SERVING
+                )
                 .ifPresent(queue -> {
+
                     queue.setStatus(QueueStatus.COMPLETED);
+
                     queueRepository.save(queue);
                 });
 
         Queue nextQueue = queueRepository
                 .findFirstByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
                         business,
-                        QueueStatus.WAITING)
+                        QueueStatus.WAITING
+                )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "No waiting customers"));
+                                "No waiting customers"
+                        ));
 
         nextQueue.setStatus(QueueStatus.SERVING);
 
@@ -214,22 +300,28 @@ public class QueueServiceImpl implements QueueService {
         return mapToResponse(nextQueue);
     }
 
+
+    // =========================
+    // COMPLETE CUSTOMER
+    // =========================
+
     @Override
-    public QueueResponse completeCurrentCustomer(Long businessId) {
+    public QueueResponse completeCurrentCustomer(
+            Long businessId) {
 
         verifyBusinessOwnership(businessId);
 
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Business not found"));
+        Business business = findBusiness(businessId);
 
         Queue currentQueue = queueRepository
                 .findFirstByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
                         business,
-                        QueueStatus.SERVING)
+                        QueueStatus.SERVING
+                )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "No customer is currently being served"));
+                                "No customer is currently being served"
+                        ));
 
         currentQueue.setStatus(QueueStatus.COMPLETED);
 
@@ -242,46 +334,57 @@ public class QueueServiceImpl implements QueueService {
 
         return mapToResponse(currentQueue);
     }
+
+
+    // =========================
+    // CANCEL QUEUE
+    // =========================
+
     @Override
     public QueueResponse cancelQueue(Long id) {
 
-        Queue queue = queueRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Queue not found"));
+        User user = getCurrentUser();
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+        Queue queue = findQueue(id);
 
-        String email = authentication.getName();
+        /*
+         * Customer can cancel their own queue.
+         * Business owner can cancel a queue in their business.
+         * Admin can cancel any queue.
+         */
+        if (user.getRole() == Role.USER) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+            if (!queue.getAppointment()
+                    .getUser()
+                    .getId()
+                    .equals(user.getId())) {
 
-        if (user.getRole() == Role.BUSINESS_OWNER) {
-
-            BusinessOwner owner =
-                    businessOwnerRepository.findByUser_Email(email)
-                            .orElseThrow(() ->
-                                    new RuntimeException(
-                                            "You are not a business owner"
-                                    ));
-
-            Long queueBusinessId =
-                    queue.getAppointment()
-                            .getBusiness()
-                            .getId();
-
-            if (!owner.getBusiness().getId().equals(queueBusinessId)) {
                 throw new RuntimeException(
                         "You are not authorized to cancel this queue"
                 );
             }
         }
 
+        if (user.getRole() == Role.BUSINESS_OWNER) {
+
+            verifyBusinessOwnership(
+                    queue.getAppointment()
+                            .getBusiness()
+                            .getId()
+            );
+        }
+
         if (queue.getStatus() == QueueStatus.COMPLETED) {
+
             throw new RuntimeException(
                     "Completed queue cannot be cancelled"
+            );
+        }
+
+        if (queue.getStatus() == QueueStatus.CANCELLED) {
+
+            throw new RuntimeException(
+                    "Queue is already cancelled"
             );
         }
 
@@ -297,22 +400,36 @@ public class QueueServiceImpl implements QueueService {
         return mapToResponse(queue);
     }
 
+
+    // =========================
+    // QUEUE POSITION
+    // =========================
+
     @Override
-    public QueuePositionResponse getQueuePosition(Long queueId) {
+    public QueuePositionResponse getQueuePosition(
+            Long queueId) {
 
-        Queue queue = queueRepository.findById(queueId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Queue not found"));
+        User user = getCurrentUser();
 
-        Business business = queue.getAppointment().getBusiness();
+        Queue queue = findQueue(queueId);
 
-        List<Queue> waitingQueues = queueRepository
-                .findByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
-                        business,
-                        QueueStatus.WAITING);
+        verifyQueueAccess(queue, user);
 
-        int peopleAhead = (int) waitingQueues.stream()
-                .filter(q -> q.getQueueNumber() < queue.getQueueNumber())
+        Business business =
+                queue.getAppointment().getBusiness();
+
+        List<Queue> waitingQueues =
+                queueRepository
+                        .findByAppointment_BusinessAndStatusOrderByQueueNumberAsc(
+                                business,
+                                QueueStatus.WAITING
+                        );
+
+        int peopleAhead = (int) waitingQueues
+                .stream()
+                .filter(q ->
+                        q.getQueueNumber()
+                                < queue.getQueueNumber())
                 .count();
 
         int estimatedWait = peopleAhead * 10;
@@ -325,87 +442,278 @@ public class QueueServiceImpl implements QueueService {
                 .build();
     }
 
-    @Override
-    public WaitTimeResponse getEstimatedWaitTime(Long queueId) {
 
-        QueuePositionResponse position = getQueuePosition(queueId);
+    // =========================
+    // ESTIMATED WAIT TIME
+    // =========================
+
+    @Override
+    public WaitTimeResponse getEstimatedWaitTime(
+            Long queueId) {
+
+        // getQueuePosition already performs ownership checking.
+        QueuePositionResponse position =
+                getQueuePosition(queueId);
 
         return WaitTimeResponse.builder()
                 .queueId(position.getQueueId())
-                .estimatedWaitMinutes(position.getEstimatedWaitMinutes())
+                .estimatedWaitMinutes(
+                        position.getEstimatedWaitMinutes()
+                )
                 .build();
     }
+
+
+    // =========================
+    // QUEUE STATISTICS
+    // =========================
+
     @Override
     public QueueStatisticsResponse getQueueStatistics() {
 
+        User user = getCurrentUser();
+
+        if (user.getRole() != Role.ADMIN) {
+
+            throw new RuntimeException(
+                    "Only administrators can view queue statistics"
+            );
+        }
+
         return QueueStatisticsResponse.builder()
                 .totalQueues(queueRepository.count())
-                .waitingCustomers(queueRepository.countByStatus(QueueStatus.WAITING))
-                .servingCustomers(queueRepository.countByStatus(QueueStatus.SERVING))
-                .completedCustomers(queueRepository.countByStatus(QueueStatus.COMPLETED))
-                .cancelledCustomers(queueRepository.countByStatus(QueueStatus.CANCELLED))
+                .waitingCustomers(
+                        queueRepository.countByStatus(
+                                QueueStatus.WAITING
+                        )
+                )
+                .servingCustomers(
+                        queueRepository.countByStatus(
+                                QueueStatus.SERVING
+                        )
+                )
+                .completedCustomers(
+                        queueRepository.countByStatus(
+                                QueueStatus.COMPLETED
+                        )
+                )
+                .cancelledCustomers(
+                        queueRepository.countByStatus(
+                                QueueStatus.CANCELLED
+                        )
+                )
                 .build();
     }
+
+
+    // =========================
+    // CUSTOMER DASHBOARD
+    // =========================
+
     @Override
-    public CustomerDashboardResponse getCustomerDashboard(Long appointmentId) {
+    public CustomerDashboardResponse getCustomerDashboard(
+            Long appointmentId) {
 
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Appointment not found"));
+        User user = getCurrentUser();
 
-        Queue queue = queueRepository.findByAppointment(appointment)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Queue not found"));
+        Appointment appointment =
+                appointmentRepository.findById(appointmentId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Appointment not found"
+                                ));
 
-        QueuePositionResponse position = getQueuePosition(queue.getId());
+        if (user.getRole() != Role.ADMIN &&
+                !appointment.getUser()
+                        .getId()
+                        .equals(user.getId())) {
+
+            throw new RuntimeException(
+                    "You are not authorized to view this dashboard"
+            );
+        }
+
+        Queue queue =
+                queueRepository.findByAppointment(appointment)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Queue not found"
+                                ));
+
+        QueuePositionResponse position =
+                getQueuePosition(queue.getId());
 
         return CustomerDashboardResponse.builder()
                 .appointmentId(appointment.getId())
                 .queueId(queue.getId())
-                .businessName(appointment.getBusiness().getName())
+                .businessName(
+                        appointment.getBusiness().getName()
+                )
                 .queueNumber(queue.getQueueNumber())
                 .peopleAhead(position.getPeopleAhead())
-                .estimatedWaitMinutes(position.getEstimatedWaitMinutes())
+                .estimatedWaitMinutes(
+                        position.getEstimatedWaitMinutes()
+                )
                 .queueStatus(queue.getStatus())
                 .build();
     }
-    private void verifyBusinessOwnership(Long businessId) {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
 
-        String email = authentication.getName();
+    // =========================
+    // BUSINESS OWNERSHIP
+    // =========================
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+    private void verifyBusinessOwnership(
+            Long businessId) {
 
-        // Admin can access any business
+        User user = getCurrentUser();
+
+        // Admin can access any business.
         if (user.getRole() == Role.ADMIN) {
             return;
         }
 
+        if (user.getRole() != Role.BUSINESS_OWNER) {
+
+            throw new RuntimeException(
+                    "Only business owners can perform this action"
+            );
+        }
+
         BusinessOwner owner =
-                businessOwnerRepository.findByUser_Email(email)
+                businessOwnerRepository
+                        .findByUser_Email(user.getEmail())
                         .orElseThrow(() ->
                                 new RuntimeException(
                                         "You are not a business owner"
                                 ));
 
-        if (!owner.getBusiness().getId().equals(businessId)) {
+        if (!owner.getBusiness()
+                .getId()
+                .equals(businessId)) {
+
             throw new RuntimeException(
                     "You are not authorized to access this business"
             );
         }
     }
 
-    private QueueResponse mapToResponse(Queue queue) {
+
+    // =========================
+    // QUEUE ACCESS
+    // =========================
+
+    private void verifyQueueAccess(
+            Queue queue,
+            User user) {
+
+        // Admin can access any queue.
+        if (user.getRole() == Role.ADMIN) {
+            return;
+        }
+
+        // Customer can access their own queue.
+        if (user.getRole() == Role.USER) {
+
+            if (!queue.getAppointment()
+                    .getUser()
+                    .getId()
+                    .equals(user.getId())) {
+
+                throw new RuntimeException(
+                        "You are not authorized to access this queue"
+                );
+            }
+
+            return;
+        }
+
+        // Business owner can access queues
+        // belonging to their business.
+        if (user.getRole() == Role.BUSINESS_OWNER) {
+
+            verifyBusinessOwnership(
+                    queue.getAppointment()
+                            .getBusiness()
+                            .getId()
+            );
+
+            return;
+        }
+
+        throw new RuntimeException(
+                "You are not authorized to access this queue"
+        );
+    }
+
+
+    // =========================
+    // CURRENT USER
+    // =========================
+
+    private User getCurrentUser() {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found"
+                        ));
+    }
+
+
+    // =========================
+    // FIND QUEUE
+    // =========================
+
+    private Queue findQueue(Long id) {
+
+        return queueRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Queue not found"
+                        ));
+    }
+
+
+    // =========================
+    // FIND BUSINESS
+    // =========================
+
+    private Business findBusiness(Long id) {
+
+        return businessRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Business not found"
+                        ));
+    }
+
+
+    // =========================
+    // RESPONSE MAPPER
+    // =========================
+
+    private QueueResponse mapToResponse(
+            Queue queue) {
 
         return QueueResponse.builder()
                 .id(queue.getId())
-                .appointmentId(queue.getAppointment().getId())
-                .queueNumber(queue.getQueueNumber())
-                .status(queue.getStatus())
+                .appointmentId(
+                        queue.getAppointment().getId()
+                )
+                .queueNumber(
+                        queue.getQueueNumber()
+                )
+                .status(
+                        queue.getStatus()
+                )
                 .build();
     }
 }

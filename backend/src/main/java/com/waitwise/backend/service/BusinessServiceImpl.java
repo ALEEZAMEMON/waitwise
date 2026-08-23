@@ -258,9 +258,7 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
 
-    // =========================
-    // CURRENT USER
-    // =========================
+
 
     private User getCurrentUser() {
 

@@ -14,17 +14,26 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    @GetMapping("/user/{userId}")
-    public List<NotificationResponse> getUserNotifications(
-            @PathVariable Long userId) {
 
-        return notificationService.getUserNotifications(userId);
+    // =========================
+    // GET MY NOTIFICATIONS
+    // =========================
+
+    @GetMapping
+    public List<NotificationResponse> getMyNotifications() {
+
+        return notificationService.getMyNotifications();
     }
 
-    @PutMapping("/{notificationId}/read")
-    public NotificationResponse markAsRead(
-            @PathVariable Long notificationId) {
 
-        return notificationService.markAsRead(notificationId);
+    // =========================
+    // MARK AS READ
+    // =========================
+
+    @PutMapping("/{id}/read")
+    public NotificationResponse markAsRead(
+            @PathVariable Long id) {
+
+        return notificationService.markAsRead(id);
     }
 }

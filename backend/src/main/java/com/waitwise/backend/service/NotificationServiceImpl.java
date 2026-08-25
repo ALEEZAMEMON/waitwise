@@ -7,6 +7,8 @@ import com.waitwise.backend.exception.ResourceNotFoundException;
 import com.waitwise.backend.repository.NotificationRepository;
 import com.waitwise.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,12 +21,21 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
+
+    // =========================
+    // CREATE NOTIFICATION
+    // =========================
+
     @Override
-    public void createNotification(Long userId, String message) {
+    public void createNotification(
+            Long userId,
+            String message) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(
+                                "User not found"
+                        ));
 
         Notification notification = Notification.builder()
                 .user(user)
@@ -36,34 +47,90 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.save(notification);
     }
 
+
+    // =========================
+    // GET MY NOTIFICATIONS
+    // =========================
+
     @Override
-    public List<NotificationResponse> getUserNotifications(Long userId) {
+    public List<NotificationResponse> getMyNotifications() {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+        User user = getCurrentUser();
 
-        return notificationRepository.findByUserOrderByCreatedAtDesc(user)
+        return notificationRepository
+                .findByUserOrderByCreatedAtDesc(user)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
-    @Override
-    public NotificationResponse markAsRead(Long notificationId) {
 
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Notification not found"));
+    // =========================
+    // MARK AS READ
+    // =========================
+
+    @Override
+    public NotificationResponse markAsRead(
+            Long notificationId) {
+
+        User user = getCurrentUser();
+
+        Notification notification =
+                notificationRepository.findById(notificationId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Notification not found"
+                                ));
+
+        /*
+         * Make sure the notification belongs
+         * to the currently logged-in user.
+         */
+        if (!notification.getUser()
+                .getId()
+                .equals(user.getId())) {
+
+            throw new RuntimeException(
+                    "You are not authorized to access this notification"
+            );
+        }
 
         notification.setIsRead(true);
 
-        notificationRepository.save(notification);
+        notification =
+                notificationRepository.save(notification);
 
         return mapToResponse(notification);
     }
 
-    private NotificationResponse mapToResponse(Notification notification) {
+
+    // =========================
+    // CURRENT USER
+    // =========================
+
+    private User getCurrentUser() {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found"
+                        ));
+    }
+
+
+    // =========================
+    // RESPONSE MAPPER
+    // =========================
+
+    private NotificationResponse mapToResponse(
+            Notification notification) {
 
         return NotificationResponse.builder()
                 .id(notification.getId())

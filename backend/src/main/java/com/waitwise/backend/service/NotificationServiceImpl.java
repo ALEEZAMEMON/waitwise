@@ -125,9 +125,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
 
-    // =========================
-    // RESPONSE MAPPER
-    // =========================
+
 
     private NotificationResponse mapToResponse(
             Notification notification) {

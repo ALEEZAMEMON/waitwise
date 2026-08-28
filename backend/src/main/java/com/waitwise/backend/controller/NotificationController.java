@@ -15,9 +15,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
 
-    // =========================
-    // GET MY NOTIFICATIONS
-    // =========================
+
 
     @GetMapping
     public List<NotificationResponse> getMyNotifications() {

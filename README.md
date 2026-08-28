@@ -115,5 +115,7 @@ WaitWise is designed around three primary roles.
 
 ---
 
+## 📌 Status
 
+🚧 Under Development
 

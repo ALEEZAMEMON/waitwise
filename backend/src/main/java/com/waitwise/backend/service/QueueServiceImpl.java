@@ -646,7 +646,6 @@ public class QueueServiceImpl implements QueueService {
         );
     }
 
-
     // =========================
     // CURRENT USER
     // =========================
@@ -667,7 +666,6 @@ public class QueueServiceImpl implements QueueService {
                         ));
     }
 
-
     // =========================
     // FIND QUEUE
     // =========================
@@ -681,7 +679,6 @@ public class QueueServiceImpl implements QueueService {
                         ));
     }
 
-
     // =========================
     // FIND BUSINESS
     // =========================
@@ -694,7 +691,6 @@ public class QueueServiceImpl implements QueueService {
                                 "Business not found"
                         ));
     }
-
 
     // =========================
     // RESPONSE MAPPER

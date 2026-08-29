@@ -94,7 +94,6 @@ public class QueueServiceImpl implements QueueService {
         return mapToResponse(queue);
     }
 
-
     // =========================
     // GET ALL QUEUES
     // =========================
@@ -125,7 +124,6 @@ public class QueueServiceImpl implements QueueService {
                 .toList();
     }
 
-
     // =========================
     // GET QUEUE BY ID
     // =========================
@@ -141,7 +139,6 @@ public class QueueServiceImpl implements QueueService {
 
         return mapToResponse(queue);
     }
-
 
     // =========================
     // UPDATE QUEUE
@@ -186,7 +183,6 @@ public class QueueServiceImpl implements QueueService {
 
         return mapToResponse(queue);
     }
-
 
     // =========================
     // DELETE QUEUE

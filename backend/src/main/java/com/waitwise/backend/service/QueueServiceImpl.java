@@ -200,7 +200,6 @@ public class QueueServiceImpl implements QueueService {
         queueRepository.delete(queue);
     }
 
-
     // =========================
     // BUSINESS QUEUE
     // =========================
@@ -221,7 +220,6 @@ public class QueueServiceImpl implements QueueService {
                 .map(this::mapToResponse)
                 .toList();
     }
-
 
     // =========================
     // CURRENT SERVING
@@ -247,7 +245,6 @@ public class QueueServiceImpl implements QueueService {
 
         return mapToResponse(queue);
     }
-
 
     // =========================
     // CALL NEXT CUSTOMER
@@ -296,7 +293,6 @@ public class QueueServiceImpl implements QueueService {
         return mapToResponse(nextQueue);
     }
 
-
     // =========================
     // COMPLETE CUSTOMER
     // =========================
@@ -330,7 +326,6 @@ public class QueueServiceImpl implements QueueService {
 
         return mapToResponse(currentQueue);
     }
-
 
     // =========================
     // CANCEL QUEUE
@@ -396,7 +391,6 @@ public class QueueServiceImpl implements QueueService {
         return mapToResponse(queue);
     }
 
-
     // =========================
     // QUEUE POSITION
     // =========================
@@ -438,7 +432,6 @@ public class QueueServiceImpl implements QueueService {
                 .build();
     }
 
-
     // =========================
     // ESTIMATED WAIT TIME
     // =========================
@@ -458,7 +451,6 @@ public class QueueServiceImpl implements QueueService {
                 )
                 .build();
     }
-
 
     // =========================
     // QUEUE STATISTICS
@@ -500,7 +492,6 @@ public class QueueServiceImpl implements QueueService {
                 )
                 .build();
     }
-
 
     // =========================
     // CUSTOMER DASHBOARD
@@ -554,7 +545,6 @@ public class QueueServiceImpl implements QueueService {
                 .build();
     }
 
-
     // =========================
     // BUSINESS OWNERSHIP
     // =========================
@@ -593,7 +583,6 @@ public class QueueServiceImpl implements QueueService {
             );
         }
     }
-
 
     // =========================
     // QUEUE ACCESS

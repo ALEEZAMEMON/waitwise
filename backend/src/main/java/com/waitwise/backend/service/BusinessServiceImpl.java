@@ -261,7 +261,6 @@ public class BusinessServiceImpl implements BusinessService {
     // CURRENT USER
     // =========================
 
-
     private User getCurrentUser() {
 
         Authentication authentication =
@@ -277,7 +276,6 @@ public class BusinessServiceImpl implements BusinessService {
                                 "User not found"
                         ));
     }
-
 
     // =========================
     // RESPONSE MAPPER

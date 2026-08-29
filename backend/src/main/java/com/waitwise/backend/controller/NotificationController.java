@@ -14,7 +14,6 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-
     // =========================
     // GET MY NOTIFICATIONS
     // =========================
@@ -24,7 +23,6 @@ public class NotificationController {
 
         return notificationService.getMyNotifications();
     }
-
 
     // =========================
     // MARK AS READ

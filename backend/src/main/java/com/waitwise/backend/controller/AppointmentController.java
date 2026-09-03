@@ -18,7 +18,6 @@ public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
-
     // =========================
     // CREATE APPOINTMENT
     // =========================
@@ -30,7 +29,6 @@ public class AppointmentController {
 
         return appointmentService.createAppointment(request);
     }
-
 
     // =========================
     // GET APPOINTMENTS
@@ -70,7 +68,6 @@ public class AppointmentController {
         return appointmentService.updateAppointment(id, request);
     }
 
-
     // =========================
     // UPDATE APPOINTMENT STATUS
     // =========================
@@ -86,7 +83,6 @@ public class AppointmentController {
                 request
         );
     }
-
 
     // =========================
     // DELETE APPOINTMENT
